@@ -3,7 +3,7 @@ from parapy.core import *
 from parapy.geom import *
 from math import radians
 from math import tan
-from HelperFunction.help_fucntions import *
+from Function.help_fucntions import *
 import warnings
 
 

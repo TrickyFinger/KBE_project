@@ -5,8 +5,9 @@ import numpy as np
 from parapy.core.validate import *
 from parapy.core.decorators import action
 from parapy.gui.image import Image
-from HelperFunction.help_fucntions import *
+from Function.help_fucntions import *
 from fpdf import FPDF
+from EMWET import emwet
 
 
 class Analysis(avl.Interface):
@@ -22,19 +23,20 @@ class Analysis(avl.Interface):
     TYPE_winglet = Input()
     TYPE_wing_airfoil = Input()
     configuration = Input()
+    sp_fuel =
 
     @Attribute
     def air_property(self):
         # barometric formula for air density (0-11000m)
-        g = 9.80665         # gravitational accel       [m/s2]
-        R = 8.3144598       # universal gas constant    [Nm]
-        M = 0.0289644       # molar mass of Earth's air [kg/mol]
-        T = 288.15          # standard temperature      [K]
-        L = -0.0065         # temperature lapse rate    [K/m]
-        rho_b = 1.225       # air density at sea level  [kg/m3]
+        g = 9.80665  # gravitational accel       [m/s2]
+        R = 8.3144598  # universal gas constant    [Nm]
+        M = 0.0289644  # molar mass of Earth's air [kg/mol]
+        T = 288.15  # standard temperature      [K]
+        L = -0.0065  # temperature lapse rate    [K/m]
+        rho_b = 1.225  # air density at sea level  [kg/m3]
         gamma = 1.4
-        air_density = rho_b * (T / (T+L*int(self.altitude))) ** (1+(g*M) / (R*L))
-        speed_of_sound = np.sqrt(gamma * R * (T+L*int(self.altitude)) / M)
+        air_density = rho_b * (T / (T + L * int(self.altitude))) ** (1 + (g * M) / (R * L))
+        speed_of_sound = np.sqrt(gamma * R * (T + L * int(self.altitude)) / M)
         return air_density, speed_of_sound
 
     @Attribute
@@ -42,7 +44,7 @@ class Analysis(avl.Interface):
     def q(self):
         rho = self.air_property[0]
         a = self.air_property[1]
-        q = 0.5 * rho * (a * float(self.configuration.mach))**2
+        q = 0.5 * rho * (a * float(self.configuration.mach)) ** 2
 
         right_wing = self.aircraft.right_wing
 
@@ -55,7 +57,7 @@ class Analysis(avl.Interface):
             file.write("\t\t")
             file.write(str(self.configuration.mach))
             file.write("\t\t")
-            file.write(str(4000*self.altitude-3000))
+            file.write(str(4000 * self.altitude - 3000))
             file.write("\t\t")
             file.write(str(round(right_wing.wing_sweep_025c, 2)))
             file.write("\t")
@@ -77,6 +79,11 @@ class Analysis(avl.Interface):
     @Attribute
     def CL(self):
         return {case_name: result['Totals']['CLtot']
+                for case_name, result in self.results.items()}
+
+    @Attribute
+    def CD(self):
+        return {case_name: result['Totals']['CDtot']
                 for case_name, result in self.results.items()}
 
     @Attribute
@@ -175,6 +182,44 @@ class Analysis(avl.Interface):
         image_2 = Image(shapes=self.aircraft[1].surface, view='top', width=400, height=400)
         return image_1, image_2
 
+    @Attribute
+    def range_increase(self):
+        emwet_case1 = emwet(namefile='xxx',
+                            MTOW=Input(),  # [kg]
+                            MZF=Input(),  # [kg]
+                            load_factor=Input(),
+                            span=Input(),  # [m]
+                            root_chord=Input(),  # [m]
+                            taper_ratio=Input(),
+                            sweep_le=Input(),  # [deg]
+
+                            spar_front=Input(),
+                            spar_rear=Input(),
+                            ftank_start=Input(),
+                            ftank_end=Input(),
+                            eng_num=Input(),
+                            eng_ypos=Input(),
+                            eng_mass=Input(),  # kg
+                            E_al=Input(),  # N/m2
+                            rho_al=Input(),  # kg/m3
+                            Ft_al=Input(),  # N/m2
+                            Fc_al=Input(),  # N/m2
+                            pitch_rib=Input(),  # [m]
+                            eff_factor=Input(),  # Depend on the stringer type
+                            Airfoil=Input(),
+                            section_num=Input(),
+                            airfoil_num=Input(),
+                            wing_surf=Input())
+
+    @Attribute
+    def range_est(self):
+        cruise_speed = self.configuration.mach * self.air_property[1]
+
+
+    @Attribute
+    def fuel_est(self):
+
+
     @action(label='Check Inputs')
     def check(self):
         if self.TYPE_winglet == 3:
@@ -198,5 +243,3 @@ class Analysis(avl.Interface):
         pdf.set_font('Arial', 'B', 16)
         pdf.image('Output/test1.png', 10, 10)
         pdf.output('Output/testpdf.pdf', 'F')
-
-

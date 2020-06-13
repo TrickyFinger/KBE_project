@@ -3,7 +3,7 @@ from parapy.core import *
 from Geometry.section import Section
 import kbeutils.avl as avl
 import numpy as np
-from HelperFunction.help_fucntions import *
+from Function.help_fucntions import *
 from parapy.core.validate import *
 
 

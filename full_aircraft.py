@@ -1,9 +1,14 @@
+# Todo: update the total wing span each time when winglet or wing geometry changes and limit it.
+# Todo: Implement EMWET and make necessary assumptions to achieve the convergence. Plot the influence of winglet on
+#       range and fuel
+
+
 from parapy.geom import *
 from parapy.core import *
 from Geometry.section import Section
 import kbeutils.avl as avl
 import numpy as np
-from HelperFunction.help_fucntions import *
+from Function.help_fucntions import *
 from parapy.core.validate import *
 
 

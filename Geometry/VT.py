@@ -2,7 +2,7 @@ from __future__ import division
 from math import sqrt
 from Geometry.wing import *
 from Geometry.fuselage import *
-from HelperFunction.help_fucntions import *
+from Function.help_fucntions import *
 
 
 class VerticalTail(GeomBase):

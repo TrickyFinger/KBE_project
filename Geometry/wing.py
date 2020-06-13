@@ -2,7 +2,7 @@ import kbeutils.avl as avl
 from math import *
 from parapy.geom import *
 from parapy.core import *
-from HelperFunction.help_fucntions import *
+from Function.help_fucntions import *
 from Geometry.section import Section
 import warnings
 
