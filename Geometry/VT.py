@@ -67,17 +67,22 @@ class VerticalTail(GeomBase):
 
     @Attribute(in_tree=True)
     def section_positions(self):
-        htp_root_pos = translate(self.position,
+        vtp_root_pos = translate(self.position,
                                  'x', (self.starting_point_mac + 0.25 * self.MAC_chord_length + self.vtp_tailarm -
                                        (tan(radians(self.sweep_vtp)) * self.mac_y_pos_vtp) -
                                        (0.25 * self.MAC_length_vtp)))
-        htp_tip_pos = translate(self.position,
+        vtp_tip_pos = translate(self.position,
                                 'x', (self.starting_point_mac + 0.25 * self.MAC_chord_length + self.vtp_tailarm -
                                       (tan(radians(self.sweep_vtp)) * self.mac_y_pos_vtp) - (
                                               0.25 * self.MAC_length_vtp)) +
                                 (self.vtp_span * tan(radians(self.sweep_vtp))),
                                 'y', self.vtp_span)
-        return [htp_root_pos, htp_tip_pos]
+        return [vtp_root_pos, vtp_tip_pos]
+
+    @Attribute
+    def end_pos_vtp(self):
+        vtp_root_pos = self.section_positions[0]
+        return vtp_root_pos.x + self.chords[0]
 
     @Part
     def sections(self):

@@ -25,9 +25,6 @@
 7. Dynamic pressure can be noted in the Attribute slot of the "AVLroot" 
 	-It can be changed by changing the mach cruise number in "A320(aircraft) and for changing the altitude in "AVLroot".
 	- Altitude can be changed by changing the altitude input slot.
-		- Altitude = 1 represents 1000 meters
-		- Altitued = 2 represents 3000 meters
-		- Altitude = 3 represents 9000 meters
 
 8. Root bending moment (in Nm) can be noted in the Attribute slot of the "AVLroot"
 
@@ -40,4 +37,6 @@
 	in the exact order are:
 	wing airfoil type, winglet type, M_cruise, wing quarter chord sweep, altitude, dynamic pressure, root bending moment(fixed AoA), root bending moment (fixed Cl)
 	- The user can choose to plot the change in root bending moment with 'sweep' or 'altitude' by setting the corresponding input(plot_which) and then clicking the plot_root_bending_moment.
-	- From "A320(aircraft)" in the product tree, the user can write a .stp file to export geometry models to CAD systems.  
+	- From "A320(aircraft)" in the product tree, the user can write a .stp file to export geometry models to CAD systems.
+
+temp1. To use EMWET, dat files of the airfoils used must be stored in the EMWET folder

@@ -11,14 +11,15 @@ class CantedWinglet(GeomBase):
     name = Input("Canted Wingelet")
     airfoil_root = Input()
     airfoil_tip = Input()
-    chord_wingtip = Input()
-    chord_root_ratio = Input()
+    chord_wingtip = Input(label='Non-settable')
+    chord_root_ratio = Input()   # chord_winglet_root / chord_wingtip
     taper_ratio = Input()
-    wing_span = Input()
+    semi_span = Input()
     height_ratio = Input()
     sweep = Input()
     cant = Input()
     twist_tip = Input()
+    limit_span_increase = Input()
 
     avl_duplicate_pos = Input()
 
@@ -34,7 +35,7 @@ class CantedWinglet(GeomBase):
 
     @Attribute
     def height(self):
-        return self.wing_span * self.height_ratio
+        return self.semi_span * self.height_ratio
 
     @Attribute
     def section_positions(self):
@@ -44,6 +45,12 @@ class CantedWinglet(GeomBase):
                                             'x', np.tan(np.deg2rad(self.sweep))*self.height),
                          'y', np.deg2rad(self.twist_tip))
         return root_pos, tip_pos
+
+    @Attribute
+    def percent_span_increase(self):
+        tip_pos = self.section_positions[1]
+        res = (tip_pos.y / self.semi_span - 1) * 100
+        return res
 
     @Part
     def sections(self):
@@ -73,6 +80,11 @@ class CantedWinglet(GeomBase):
     @cant.on_slot_change
     def on_cant_change(self, slot, new, old):
         self.cant = check_slot_change('cant', new, old, [0, 40])
+        if self.percent_span_increase > self.limit_span_increase:
+            msg = 'Wing span has increased by ' + str(round(self.percent_span_increase, 2)) + '%. ' + \
+                  'Current limit is ' + str(self.limit_span_increase) + \
+                  '%, you can change limit_span_increase to adjust it.'
+            generate_warning("Warning: ", msg)
 
     @sweep.on_slot_change
     def on_sweep_change(self, slot, new, old):
@@ -88,11 +100,16 @@ class CantedWinglet(GeomBase):
 
     @taper_ratio.on_slot_change
     def on_taper_ratio_change(self, slot, new, old):
-        self.taper_ratio = check_slot_change('taper_ratio', new, old, [0.2, 0.5])
+        self.taper_ratio = check_slot_change('taper_ratio', new, old, [0.2, 0.4])
 
     @height_ratio.on_slot_change
     def height_ratio_listener(self, slot, new, old):
-        self.height_ratio = check_slot_change('height_ratio', new, old, [0.05, 0.1])
+        self.height_ratio = check_slot_change('height_ratio', new, old, [0.1, 0.2])
+        if self.percent_span_increase > self.limit_span_increase:
+            msg = 'Wing span has increased by ' + str(round(self.percent_span_increase, 2)) + '%. ' + \
+                  'Current limit is ' + str(self.limit_span_increase) + \
+                  '%, you can change limit_span_increase to adjust it.'
+            generate_warning("Warning: ", msg)
 
 
 class WingtipFence(GeomBase):
@@ -101,12 +118,12 @@ class WingtipFence(GeomBase):
     airfoil_up = Input()
     airfoil_root = Input()
     airfoil_down = Input()
-    wing_span = Input()
-    chord_wingtip = Input()
+    semi_span = Input()
+    chord_wingtip = Input(label='Non-settable')
 
-    chord_root_ratio = Input(validator=Range(0.3, 0.6))
-    taper_ratio_up = Input(validator=Range(0.2, 0.5))
-    taper_ratio_down = Input(validator=Range(0.2, 0.5))
+    chord_root_ratio = Input(validator=Range(0.3, 0.6))   # chord_winglet_root / chord_wingtip
+    taper_ratio_up = Input(validator=Range(0.2, 0.4))     # chord_up / chord_winglet_root
+    taper_ratio_down = Input(validator=Range(0.2, 0.4))
     height_up_ratio = Input(validator=Range(0.02, 0.6))
     height_down_ratio = Input(validator=Range(0.02, 0.6))
     sweep_up = Input(validator=Range(50, 70))
@@ -125,15 +142,19 @@ class WingtipFence(GeomBase):
 
     @Attribute
     def height_up(self):
-        return self.wing_span * self.height_up_ratio
+        return self.semi_span * self.height_up_ratio
 
     @Attribute
     def height_down(self):
-        return self.wing_span * self.height_down_ratio
+        return self.semi_span * self.height_down_ratio
 
     @Attribute
     def airfoils(self):
         return self.airfoil_up, self.airfoil_root, self.airfoil_down
+
+    @Attribute
+    def percent_span_increase(self):
+        return 0
 
     @Attribute
     def section_positions(self):
@@ -174,17 +195,17 @@ class RakedWingtip(GeomBase):
 
     airfoil_start = Input()
     airfoil_tip = Input()
-    chord_start = Input()
+    chord_start = Input(label='Non-settable')
     taper_ratio = Input()
-    wing_span = Input()
-    span_ratio = Input()
+    semi_span = Input()
+    span_ratio = Input()  # winglet_span / wing_span
     sweep_le = Input()
 
     avl_duplicate_pos = Input()
 
     @Attribute
     def span(self):
-        return self.span_ratio * self.wing_span
+        return self.span_ratio * self.semi_span
 
     @Attribute
     def chords(self):
@@ -201,6 +222,12 @@ class RakedWingtip(GeomBase):
         tip_pos = self.position.translate('x', self.span * np.tan(np.deg2rad(self.sweep_le)),
                                           'y', self.span)
         return start_pos, tip_pos
+
+    @Attribute
+    def percent_span_increase(self):
+        tip_pos = self.section_positions[1]
+        res = 100 * (tip_pos.y / self.semi_span - 1)
+        return res
 
     @Part
     def sections(self):
@@ -234,6 +261,9 @@ class RakedWingtip(GeomBase):
     @span_ratio.on_slot_change
     def span_ratio_listener(self, slot, new, old):
         self.span_ratio = check_slot_change("span_ratio", new, old, [0.06, 0.1])
+        # if self.fraction_span_increase > 0.02:
+        #     msg = 'Wing span has increased by' + str(self.fraction_span_increase)
+        #     generate_warning("Warning: ", msg)
 
     @taper_ratio.on_slot_change
     def taper_ratio_listener(self, slot, new, old):
@@ -246,8 +276,8 @@ class Sharklet(GeomBase):
     airfoil_start = Input()
     airfoil_mid = Input()
     airfoil_tip = Input()
-    chord_start = Input()
-    chord_mid = Input()
+    chord_start = Input(label='Non-settable')
+    chord_mid2start_ratio = Input(validator=Range(0.5, 0.7))  # chord_mid / chord_start
 
     K_lambda = Input(0.6)
     wing_semi_span = Input()
@@ -260,8 +290,13 @@ class Sharklet(GeomBase):
     twist = Input()
     dihedral = Input()
     nu_blended_sections = Input(10)  # number of sections between start and mid
+    limit_span_increase = Input()
 
     avl_duplicate_pos = Input()
+
+    @Attribute
+    def chord_mid(self):
+        return self.chord_start * self.chord_mid2start_ratio
 
     @Attribute
     # radius of the transition part
@@ -348,6 +383,12 @@ class Sharklet(GeomBase):
         section_pos.append(tip_pos)
         return section_pos
 
+    @Attribute
+    def percent_span_increase(self):
+        tip_pos = self.section_positions[2]
+        res = 100 * (tip_pos.y / self.wing_semi_span - 1)
+        return res
+
     @Part
     def sections(self):
         return Section(quantify=len(self.chords),
@@ -377,6 +418,11 @@ class Sharklet(GeomBase):
     @cant.on_slot_change
     def on_cant_change(self, slot, new, old):
         self.cant = check_slot_change('cant', new, old, [0, 40])
+        if self.percent_span_increase > self.limit_span_increase:
+            msg = 'Wing span has increased by ' + str(round(self.percent_span_increase, 2)) + '%. ' + \
+                  'Current limit is ' + str(self.limit_span_increase) + \
+                  '%, you can change limit_span_increase to adjust it.'
+            generate_warning("Warning: ", msg)
 
     @KR.on_slot_change
     def on_KR_change(self, slot, new, old):
@@ -385,6 +431,11 @@ class Sharklet(GeomBase):
     @height_ratio.on_slot_change
     def height_ratio_listener(self, slot, new, old):
         self.height_ratio = check_slot_change('height_ratio', new, old, [0.05, 0.1])
+        if self.percent_span_increase > self.limit_span_increase:
+            msg = 'Wing span has increased by ' + str(round(self.percent_span_increase, 2)) + '%. ' + \
+                  'Current limit is ' + str(self.limit_span_increase) + \
+                  '%, you can change limit_span_increase to adjust it.'
+            generate_warning("Warning: ", msg)
 
     @K_lambda.on_slot_change
     def K_lambda_listener(self, slot, new, old):
@@ -405,5 +456,6 @@ class Sharklet(GeomBase):
     @nu_blended_sections.on_slot_change
     def nu_blended_sections_listener(self, slot, new, old):
         self.nu_blended_sections = check_slot_change('nu_blended sections', new, old, [5, 10])
+
 
 

@@ -2,12 +2,13 @@ from kbeutils import avl
 from parapy.core import *
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 from parapy.core.validate import *
 from parapy.core.decorators import action
 from parapy.gui.image import Image
 from Function.help_fucntions import *
 from fpdf import FPDF
-from EMWET import emwet
+#from EMWET import emwet
 
 
 class Analysis(avl.Interface):
@@ -22,8 +23,8 @@ class Analysis(avl.Interface):
     plot_which = Input('altitude')
     TYPE_winglet = Input()
     TYPE_wing_airfoil = Input()
+    wing_weight = Input()
     configuration = Input()
-    sp_fuel =
 
     @Attribute
     def air_property(self):
@@ -45,24 +46,6 @@ class Analysis(avl.Interface):
         rho = self.air_property[0]
         a = self.air_property[1]
         q = 0.5 * rho * (a * float(self.configuration.mach)) ** 2
-
-        right_wing = self.aircraft.right_wing
-
-        with open("../output.txt", "a") as file:
-            file.write('Airfoil type\tWinglet type\tMach\tAltitude\tSweep 0.25c\t\tq\t'
-                       'M_root(fix AoA)\t\tM_root(fix Cl)\n\t\t')
-            file.write(str(self.TYPE_wing_airfoil))
-            file.write('\t\t\t\t')
-            file.write(str(self.TYPE_winglet))
-            file.write("\t\t")
-            file.write(str(self.configuration.mach))
-            file.write("\t\t")
-            file.write(str(4000 * self.altitude - 3000))
-            file.write("\t\t")
-            file.write(str(round(right_wing.wing_sweep_025c, 2)))
-            file.write("\t")
-            file.write(str(round(q, 2)))
-            file.write("\t")
         return q
 
     @Part
@@ -72,22 +55,57 @@ class Analysis(avl.Interface):
                         settings=self.case_settings[child.index][1])
 
     @Attribute
-    def l_over_d(self):
-        return {case_name: result['Totals']['CLtot'] / result['Totals']['CDtot']
-                for case_name, result in self.results.items()}
+    def Bref(self):
+        Bref = []
+        for _, result in self.results.items():
+            Bref.append(float(result['Totals']['Bref']))
+        return Bref
+
+    @Attribute
+    def Sref(self):
+        Sref = []
+        for _, result in self.results.items():
+            Sref.append(float(result['Totals']['Sref']))
+        return Sref
 
     @Attribute
     def CL(self):
-        return {case_name: result['Totals']['CLtot']
-                for case_name, result in self.results.items()}
+        for _, result in self.results.items():
+            return result['Totals']['CLtot']
 
     @Attribute
     def CD(self):
-        return {case_name: result['Totals']['CDtot']
-                for case_name, result in self.results.items()}
+        for _, result in self.results.items():
+            return result['Totals']['CDtot']
 
     @Attribute
-    def rootBendingMoment(self):
+    def l_over_d(self):
+        res = round(float(self.CL) / float(self.CD), 2)
+        return str(res)
+
+    @Attribute
+    def M_pitching_strip(self):  # sectional pitching moment
+        Cm_c4 = []
+        for _, result in self.results.items():
+            for i in range(0, int(len(result['StripForces']['wing']['cm_c/4'])/2)):
+                Cm_c4_next = result['StripForces']['wing']['cm_c/4'][i]
+                Cm_c4.append(float(Cm_c4_next))
+        return np.array(Cm_c4)
+
+    @Attribute
+    def lift_strip(self):
+        ccl = []
+        yle = []
+        for _, result in self.results.items():
+            for i in range(0, int(len(result['StripForces']['wing']['c cl'])/2)):
+                ccl.append(float(result['StripForces']['wing']['c cl'][i]))
+                yle.append(float(result['StripForces']['wing']['Yle'][i]))
+        ccl = np.array(ccl)
+        dy = yle[3] - yle[2]
+        return ccl * dy * self.q
+
+    @Attribute
+    def root_bending_moment(self):
         wlt_names = ['Canted Winglet', 'Wingtip Fence', 'Raked Wingtip']
         wing_ccl = []
         wing_yle = []
@@ -143,13 +161,6 @@ class Analysis(avl.Interface):
 
         M_root = M_root_wing + M_root_winglet
 
-        file = open("../output.txt", "a")
-        for m in list(M_root):
-            file.write(str(int(m)))
-            file.write("\t\t\t")
-        file.write("\n")
-        file.close()
-
         return list(M_root)
 
     @Attribute
@@ -177,48 +188,23 @@ class Analysis(avl.Interface):
         return 'Plot done'
 
     @Attribute
-    def output_images(self):
-        image_1 = Image(shapes=self.aircraft[0].solid, view='top', width=400, height=400)
-        image_2 = Image(shapes=self.aircraft[1].surface, view='top', width=400, height=400)
-        return image_1, image_2
+    def path_avl_output(self):
+        path_wd = os.getcwd()
+        path_avl_output = path_wd + '\\Output\\AVL_output.txt'
+        return path_avl_output
 
-    @Attribute
-    def range_increase(self):
-        emwet_case1 = emwet(namefile='xxx',
-                            MTOW=Input(),  # [kg]
-                            MZF=Input(),  # [kg]
-                            load_factor=Input(),
-                            span=Input(),  # [m]
-                            root_chord=Input(),  # [m]
-                            taper_ratio=Input(),
-                            sweep_le=Input(),  # [deg]
+    # @Attribute
+    # def output_images(self):
+    #     image_1 = Image(shapes=self.aircraft[0].solid, view='top', width=400, height=400)
+    #     image_2 = Image(shapes=self.aircraft[1].surface, view='top', width=400, height=400)
+    #     return image_1, image_2
 
-                            spar_front=Input(),
-                            spar_rear=Input(),
-                            ftank_start=Input(),
-                            ftank_end=Input(),
-                            eng_num=Input(),
-                            eng_ypos=Input(),
-                            eng_mass=Input(),  # kg
-                            E_al=Input(),  # N/m2
-                            rho_al=Input(),  # kg/m3
-                            Ft_al=Input(),  # N/m2
-                            Fc_al=Input(),  # N/m2
-                            pitch_rib=Input(),  # [m]
-                            eff_factor=Input(),  # Depend on the stringer type
-                            Airfoil=Input(),
-                            section_num=Input(),
-                            airfoil_num=Input(),
-                            wing_surf=Input())
-
-    @Attribute
-    def range_est(self):
-        cruise_speed = self.configuration.mach * self.air_property[1]
-
-
-    @Attribute
-    def fuel_est(self):
-
+    @action(label='Reset')
+    def reset(self):
+        try:
+            os.remove(self.path_avl_output)
+        except FileNotFoundError:
+            pass
 
     @action(label='Check Inputs')
     def check(self):
@@ -234,12 +220,10 @@ class Analysis(avl.Interface):
             msg = "You are flying at " + str(self.altitude) + "m. All good! Launch it!"
             generate_warning(" ", msg)
 
-    @action(label='Print PDF')
-    def printPDF(self):
-        self.output_images[0].write('Output/test1.png')
-        self.output_images[1].write('Output/test2.png')
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font('Arial', 'B', 16)
-        pdf.image('Output/test1.png', 10, 10)
-        pdf.output('Output/testpdf.pdf', 'F')
+    @action(label='Record')
+    def record(self):
+        with open(self.path_avl_output, 'a+') as f:
+            to_write = str(self.CL) + ' ' + str(self.CD) + ' ' + str(self.l_over_d) + '\n'
+            f.write(to_write)
+
+

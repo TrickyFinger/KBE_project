@@ -1,6 +1,0 @@
-Airfoil type	Winglet type	Mach	Altitude	Sweep 0.25c		q	M_root(fix AoA)		M_root(fix Cl)
-		1				0		0.756		9000		26.85	12317.03	3197125			2313907			
-Airfoil type	Winglet type	Mach	Altitude	Sweep 0.25c		q	M_root(fix AoA)		M_root(fix Cl)
-		1				0		0.756		5000		26.85	21604.66	5607910			4058704			
-Airfoil type	Winglet type	Mach	Altitude	Sweep 0.25c		q	M_root(fix AoA)		M_root(fix Cl)
-		1				0		0.756		1000		26.85	35960.88	9334347			6755699			

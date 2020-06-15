@@ -11,19 +11,10 @@ class Fuselage(GeomBase):
     """Create fuselage shape based on user inputs"""
     ln_d = Input(1.22)  # nose slenderness ratio
     lt_d = Input(2.724)  # tail slenderness ratio
-    # fuselage_length = Input(37.57)  # complete fuselage length
+    fuselage_length = Input()
+    cabin_d = Input()
 
     # **************** Fixed value *******************
-
-    @Attribute
-    # complete fuselage length
-    def fuselage_length(self):
-        return 37.57
-
-    @Attribute
-    # Cabin diameter
-    def cabin_d(self):
-        return 4.14
 
     @Attribute
     # Tail upsweep angle measured from centreline

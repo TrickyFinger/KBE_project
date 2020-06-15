@@ -1,9 +1,8 @@
 from math import radians, tan
 from parapy.core import *
 from parapy.geom import *
-
+from Function.help_fucntions import *
 from Geometry.section import Section
-import warnings
 
 
 class HorizontalTail(GeomBase):
@@ -73,6 +72,12 @@ class HorizontalTail(GeomBase):
                                 'y', self.htp_span / 2,
                                 'z', (self.htp_span * tan(radians(self.dihedral_htp))))
         return [htp_root_pos, htp_tip_pos]
+
+    # The end position of the htp
+    @Attribute
+    def end_pos_htp(self):
+        htp_root_pos = self.section_positions[0]
+        return htp_root_pos.x + self.chords[0]
 
     @Part
     def sections(self):
@@ -168,48 +173,3 @@ class HorizontalTail(GeomBase):
         else:
             return self.htp_dihedral
 
-
-def generate_warning(warning_header, msg):
-    from tkinter import Tk, messagebox
-
-    # initializing
-    window = Tk()
-    window.withdraw()
-
-    # generates message box
-    messagebox.showwarning(warning_header, msg)
-
-    # kills the GUI
-    window.deiconify()
-    window.destroy()
-    window.quit()
-    # ***************************************************
-
-    '''
-    @Part
-    def avl_surface(self):
-        return avl.Surface(name=self.name,
-                           n_chordwise=12,
-                           chord_spacing=avl.Spacing.cosine,
-                           n_spanwise=20,
-                           span_spacing=avl.Spacing.cosine,
-                           y_duplicate=self.position.point[1],
-                           sections=[section.avl_section
-                                     for section in self.sections])
-    '''
-
-
-'''
-if __name__ == '__main__':
-        from parapy.gui import display
-        obj = HorizontalTail(name="horizontal_tail",
-                             htp_root_airfoil="Boeing29root",
-                             htp_tip_airfoil="lockheedtip",
-                             htp_area=31,
-                             htp_taper=0.256,
-                             htp_aspect=5,
-                             htp_sweep_input=38,
-                             Vh=0.799,
-                             htp_dihedral=5)
-        display(obj)
-'''

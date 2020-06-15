@@ -157,7 +157,7 @@ class Wing(GeomBase):
     @Attribute
     def starting_point_mac(self):
         x_start_mac = (self.y_mac * tan(radians(self.wing_sweep_025c)) -
-                       (0.25 * self.MAC_chord_length) + 0.25 * self.chord_wingroot) + (0.48 * self.cabin_l)
+                       (0.25 * self.MAC_chord_length) + 0.25 * self.chord_wingroot)  # + (0.48 * self.cabin_l)
         return x_start_mac
 
     @Part

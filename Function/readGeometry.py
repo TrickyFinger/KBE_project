@@ -74,7 +74,7 @@ class ReadGeometry:
                     self.skt_airfoil_mid = self.wlt_airfoils[1]
                     self.skt_airfoil_tip = self.wlt_airfoils[2]
 
-                    self.skt_chord_mid = self.dat_wlt[0]
+                    self.skt_chord_mid2start_ratio = self.dat_wlt[0]
                     self.skt_K_lambda = self.dat_wlt[1]
                     self.skt_height_ratio = self.dat_wlt[2]
                     self.skt_KR = self.dat_wlt[3]
