@@ -13,6 +13,7 @@ class Fuselage(GeomBase):
     lt_d = Input(2.724)  # tail slenderness ratio
     fuselage_length = Input()
     cabin_d = Input()
+    front_part_length = Input()
 
     # **************** Fixed value *******************
 
@@ -55,7 +56,7 @@ class Fuselage(GeomBase):
                                                                height=self.cabin_l),
                                                       self.position, Vector(0, 1, 0), radians(90)),
                                 from_position=self.position,
-                                to_position=translate(self.position, 'x', self.nose_length),
+                                to_position=self.position.translate('x', self.nose_length, 'z', self.front_part_length),
                                 color='white')
 
     @Attribute
@@ -93,6 +94,10 @@ class Fuselage(GeomBase):
     def tail_length(self):
         return self.tail_slenderness_ratio * self.cabin_d
 
+    @Attribute
+    def tail_start_pos(self):
+        return self.position.translate('x', self.nose_length + self.cabin_l)
+
     """ use the different tail sections to form a complete lofted solid for the tail """
     @Part
     def fuselage_tail(self):
@@ -100,17 +105,16 @@ class Fuselage(GeomBase):
         create truncated cone with the end radius tail_r
         """
         return LoftedSolid(profiles=[Circle(radius=self.cabin_d / 2.,
-                                            position=rotate90(translate(self.cabin.position,
-                                                                        x=self.cabin_l), Vector(0, 1, 0))),
+                                            position=rotate90(self.tail_start_pos, Vector(0, 1, 0))),
                                      Circle(radius=(self.cabin_d / 2) * 0.99,
-                                            position=rotate90(translate(self.cabin.position,
-                                                                        x=self.cabin_l + 0.25,
+                                            position=rotate90(translate(self.tail_start_pos,
+                                                                        x=0.25,
                                                                         z=((self.cabin_d / 2) - (
                                                                                 self.cabin_d / 2) * 0.99)),
                                                               Vector(0, 1, 0))),
                                      Circle(radius=self.tail_radius,
-                                            position=rotate90(translate(self.cabin.position,
-                                                                        x=self.cabin_l + self.tail_length,
+                                            position=rotate90(translate(self.tail_start_pos,
+                                                                        x=self.tail_length,
                                                                         z=self.tail_length * tan(
                                                                             radians(self.upsweep_angle))),
                                                               Vector(0, 1, 0)))],

@@ -270,19 +270,25 @@ class Aircraft(GeomBase):
                                               'x'),
                             color="blue")
 
+    @Attribute(settable=True)
+    def length_fuselage_ahead_wing(self):
+        return 12
+
     @Attribute
     # complete fuselage length
     def fuselage_length(self):
         if self.htp_right_wing.end_pos_htp > self.vtp_wing.end_pos_vtp:
-            return self.htp_right_wing.end_pos_htp + 3 + 18
+            return self.htp_right_wing.end_pos_htp + 3 + self.length_fuselage_ahead_wing
         else:
-            return self.vtp_wing.end_pos_vtp + 3 + 18
+            return self.vtp_wing.end_pos_vtp + 3 + self.length_fuselage_ahead_wing
 
     @Part
     def fuselage(self):
         return Fuselage(pass_down="ln_d, lt_d",
-                        position=self.right_wing.position.translate('-x', 18, 'z', 0.4*self.cabin_d),
+                        position=self.right_wing.position.translate('-x', self.length_fuselage_ahead_wing,
+                                                                    'z', 0.4*self.cabin_d),
                         fuselage_length=self.fuselage_length,
+                        front_part_length=self.length_fuselage_ahead_wing,
                         cabin_d=self.cabin_d,
                         color="Blue")
 
