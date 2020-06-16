@@ -74,6 +74,7 @@ class Aircraft(GeomBase):
     ct_sweep = Input(input.ct_sweep)
     ct_cant = Input(input.ct_cant, validator=Range(0, 90))
     ct_twist_tip = Input(input.ct_twist_tip)
+    ct_toe = Input(input.ct_toe)
 
     # --------TYPE 1 Wingtip Fence-------------
     wtf_name = Input("Wingtip Fence")
@@ -169,6 +170,7 @@ class Aircraft(GeomBase):
                                  sweep=self.ct_sweep,
                                  cant=self.ct_cant,
                                  twist_tip=self.ct_twist_tip,
+                                 toe=self.ct_toe,
                                  limit_span_increase=self.limit_span_increase,
                                  position=self.right_wing.section_positions[2],
                                  avl_duplicate_pos=self.position,

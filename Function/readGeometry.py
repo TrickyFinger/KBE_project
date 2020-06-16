@@ -46,6 +46,7 @@ class ReadGeometry:
                     self.ct_sweep = self.dat_wlt[3]
                     self.ct_cant = self.dat_wlt[4]
                     self.ct_twist_tip = self.dat_wlt[5]
+                    self.ct_toe = self.dat_wlt[6]
                 if self.TYPE_winglet == 1:
                     self.wtf_airfoil_up = self.wlt_airfoils[0]
                     self.wtf_airfoil_root = self.wlt_airfoils[1]

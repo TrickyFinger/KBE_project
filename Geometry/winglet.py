@@ -19,9 +19,23 @@ class CantedWinglet(GeomBase):
     sweep = Input()
     cant = Input()
     twist_tip = Input()
+    toe = Input()
     limit_span_increase = Input()
 
     avl_duplicate_pos = Input()
+
+    chord_root_ratio_limit = Input([0.4, 1])
+    height_ratio_limit = Input([0.1, 0.2])
+    taper_ratio_limit = Input([0.2, 0.4])
+    cant_limit = Input([0, 40])
+    sweep_limit = Input([0, 60])
+    toe_limit = Input([-5, 5])
+    twist_tip_limit = Input([-6, 6])
+
+    @Attribute
+    def limit_list(self):
+        return [self.chord_root_ratio_limit, self.height_ratio_limit, self.taper_ratio_limit,
+                self.sweep_limit, self.cant_limit, self.toe_limit, self.twist_tip_limit]
 
     @Attribute
     def chords(self):
@@ -40,7 +54,8 @@ class CantedWinglet(GeomBase):
     @Attribute
     def section_positions(self):
         root_pos = rotate(translate(self.position, 'x', self.chord_wingtip - self.chords[0]),
-                          'x', np.deg2rad(90-self.cant))
+                          'z', np.deg2rad(self.toe))
+        root_pos = rotate(root_pos, 'x', np.deg2rad(90-self.cant))
         tip_pos = rotate(root_pos.translate('y', self.height,
                                             'x', np.tan(np.deg2rad(self.sweep))*self.height),
                          'y', np.deg2rad(self.twist_tip))
@@ -79,7 +94,7 @@ class CantedWinglet(GeomBase):
     # ***************** Warnings **********************
     @cant.on_slot_change
     def on_cant_change(self, slot, new, old):
-        self.cant = check_slot_change('cant', new, old, [0, 40])
+        self.cant = check_slot_change('cant', new, old, self.cant_limit)
         if self.percent_span_increase > self.limit_span_increase:
             msg = 'Wing span has increased by ' + str(round(self.percent_span_increase, 2)) + '%. ' + \
                   'Current limit is ' + str(self.limit_span_increase) + \
@@ -88,23 +103,27 @@ class CantedWinglet(GeomBase):
 
     @sweep.on_slot_change
     def on_sweep_change(self, slot, new, old):
-        self.sweep = check_slot_change('sweep', new, old, [0, 45])
+        self.sweep = check_slot_change('sweep', new, old, self.sweep_limit)
 
     @twist_tip.on_slot_change
     def on_twist_tip_change(self, slot, new, old):
-        self.twist_tip = check_slot_change('twist_tip', new, old, [0, 6])
+        self.twist_tip = check_slot_change('twist_tip', new, old, self.twist_tip_limit)
+
+    @toe.on_slot_change
+    def toe_listener(self, slot, new, old):
+        self.toe = check_slot_change('toe', new, old, self.toe_limit)
 
     @chord_root_ratio.on_slot_change
     def on_chord_root_ratio_change(self, slot, new, old):
-        self.chord_root_ratio = check_slot_change('chord_root_ratio', new, old, [0.4, 1])
+        self.chord_root_ratio = check_slot_change('chord_root_ratio', new, old, self.chord_root_ratio_limit)
 
     @taper_ratio.on_slot_change
     def on_taper_ratio_change(self, slot, new, old):
-        self.taper_ratio = check_slot_change('taper_ratio', new, old, [0.2, 0.4])
+        self.taper_ratio = check_slot_change('taper_ratio', new, old, self.taper_ratio_limit)
 
     @height_ratio.on_slot_change
     def height_ratio_listener(self, slot, new, old):
-        self.height_ratio = check_slot_change('height_ratio', new, old, [0.1, 0.2])
+        self.height_ratio = check_slot_change('height_ratio', new, old, self.height_ratio_limit)
         if self.percent_span_increase > self.limit_span_increase:
             msg = 'Wing span has increased by ' + str(round(self.percent_span_increase, 2)) + '%. ' + \
                   'Current limit is ' + str(self.limit_span_increase) + \

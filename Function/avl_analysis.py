@@ -226,4 +226,17 @@ class Analysis(avl.Interface):
             to_write = str(self.CL) + ' ' + str(self.CD) + ' ' + str(self.l_over_d) + '\n'
             f.write(to_write)
 
+    # @action(label='Adjust cant')
+    # def adjust_cant(self):
+    #     msg1 = "This function is to analyze the effect of cant angle on the performance, only applicable to " \
+    #            "Canted winglet (TYPE_winglet = 0)"
+    #     msg2 = "This is not a Canted winglet (TYPE_winglet = 0)"
+    #     generate_warning('Warning: ', msg1)
+    #     if self.TYPE_winglet != 0:
+    #         generate_warning('Warning: ', msg2)
+    #         return
+    #     else:
+    #         cant = self.configuration.right_winglet.cant
+
+
 
