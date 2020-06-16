@@ -1,3 +1,6 @@
+#Fuselage
+1.22 2.724
+
 #Wing
 NACA2412 NACA2410 NACA0006
 34. 0.756 0.935 7 3 -5 0.48
@@ -10,7 +13,7 @@ NACA0006 NACA0006
 #Winglet
 1
 NACA0006 NACA0006 NACA0006
-0.1645 0.7862 0.1722 0.4778 0.5063 53 66 0 0
+0.45 0.3 0.3 0.03 0.03 53 66 0 0
 
 #Winglet
 2
@@ -22,16 +25,11 @@ NACA0006 NACA0006
 NACA0006 NACA0006 NACA0006
 1.0 0.55 0.1 0.4 10 46 20 0 10
 
-#VT
-chord_root  5.63
-chord_tip   2.55
-height      6.21   % measured from the conjunction point between the trailing edge and the fuselage
-sweep       50     % leading edge
-position    35.30  % from nose. measured from the same point as height
+#HorizontalTail
+NACA0012 NACA0012
+31 0.3 5
 
-#HT
-chord_root  3.73
-chord_tip   1.23
-sweep       32     % leading edge
-dihedral    6
-position    31.6   % from nose
+#VerticalTail
+NACA0012 NACA0012
+1.82 35 21.5
+

@@ -1,7 +1,8 @@
 from kbeutils import avl
 from parapy.gui import display
-from full_aircraft import Aircraft
+from parapy.gui import image
 from parapy.core import *
+from scripts import wing
 from parapy.core.validate import *
 from parapy.core.decorators import action
 import matplotlib.pyplot as plt
@@ -9,47 +10,44 @@ import numpy as np
 import warnings
 
 
-class Avl_analysis(avl.Interface):
-
-    aircraft = Input(in_tree=True)
-    case_settings = Input()
-    plot_which = Input('altitude')
-
+class AvlAnalysis(avl.Interface):
     # TYPE_winglet and altitude will be passed to interface for warning evaluation
-    @Input
-    def TYPE_winglet(self):
-        return self.aircraft.TYPE_winglet
-
-    @Input
-    # 1: 1000m,  2: 5000m, 3:9000m
-    def altitude(self):
-        return 3
-
     # TYPE_wing_airfoil will be passed to interface for plotting purposes
     # supercritical: 1, NACA-6: 2, Conventional: 3.
-    @Input
-    def TYPE_wing_airfoil(self):
-        return self.aircraft.TYPE_wing_airfoil
+    # TYPE_wing_airfoil will be passed to interface for plotting purposes
+    # supercritical: 1, NACA-6: 2, Conventional: 3.
+    aircraft = Input(in_tree=True)
+    case_settings = Input()
+    altitude = Input(validator=Range(0, 11000))
+    plot_which = Input('altitude')
+    TYPE_winglet = Input()
+    TYPE_wing_airfoil = Input()
+    configuration = Input()
 
     @Attribute
-    def configuration(self):
-        return self.aircraft.avl_configuration
+    def air_property(self):
+        # barometric formula for air density (0-11000m)
+        g = 9.80665  # gravitational accel       [m/s2]
+        R = 8.3144598  # universal gas constant    [Nm]
+        M = 0.0289644  # molar mass of Earth's air [kg/mol]
+        T = 288.15  # standard temperature      [K]
+        L = -0.0065  # temperature lapse rate    [K/m]
+        rho_b = 1.225  # air density at sea level  [kg/m3]
+        gamma = 1.4
+        air_density = rho_b * (T / (T + L * int(self.altitude))) ** (1 + (g * M) / (R * L))
+        speed_of_sound = np.sqrt(gamma * R * (T + L * int(self.altitude)) / M)
+        return air_density, speed_of_sound
 
     @Attribute
     # dynamic pressure
     def q(self):
-        rho = [1.112, 0.736, 0.467]
-        a = [336.4, 320.5, 303.8]
-        if self.altitude == 1:
-            q = 0.5 * rho[0] * (a[0] * float(self.configuration.mach))**2
-        elif self.altitude == 2:
-            q = 0.5 * rho[1] * (a[1] * float(self.configuration.mach))**2
-        else:
-            q = 0.5 * rho[2] * (a[2] * float(self.configuration.mach))**2
+        rho = self.air_property[0]
+        a = self.air_property[1]
+        q = 0.5 * rho * (a * float(self.configuration.mach)) ** 2
 
         right_wing = self.aircraft.right_wing
 
-        with open("output.txt", "a") as file:
+        with open("../output.txt", "a") as file:
             file.write('Airfoil type\tWinglet type\tMach\tAltitude\tSweep 0.25c\t\tq\t'
                        'M_root(fix AoA)\t\tM_root(fix Cl)\n\t\t')
             file.write(str(self.TYPE_wing_airfoil))
@@ -58,13 +56,12 @@ class Avl_analysis(avl.Interface):
             file.write("\t\t")
             file.write(str(self.configuration.mach))
             file.write("\t\t")
-            file.write(str(4000*self.altitude-3000))
+            file.write(str(4000 * self.altitude - 3000))
             file.write("\t\t")
             file.write(str(round(right_wing.wing_sweep_025c, 2)))
             file.write("\t")
             file.write(str(round(q, 2)))
             file.write("\t")
-
         return q
 
     @Part
@@ -140,7 +137,7 @@ class Avl_analysis(avl.Interface):
 
         M_root = M_root_wing + M_root_winglet
 
-        file = open("output.txt", "a")
+        file = open("../output.txt", "a")
         for m in list(M_root):
             file.write(str(int(m)))
             file.write("\t\t\t")
@@ -151,7 +148,7 @@ class Avl_analysis(avl.Interface):
 
     @Attribute
     def plot_M_root_bending(self):
-        with open("output.txt", 'r+') as f:
+        with open("../output.txt", 'r+') as f:
             data = []
             count = 0
             for line in f:
@@ -172,15 +169,3 @@ class Avl_analysis(avl.Interface):
             plt.ylabel('Root bending moment (Nm) at Cl=0.5')
             plt.show()
         return 'Plot done'
-
-
-if __name__ == '__main__':
-    obj = Aircraft(label="A320")
-    # display(obj)
-
-    cases = [('fixed_aoa', {'alpha': 3}),
-             ('fixed_cl', {'alpha': avl.Parameter(name='alpha', value=0.5, setting='CL')})]
-
-    analysis = Avl_analysis(aircraft=obj,
-                            case_settings=cases)
-    display(analysis)
