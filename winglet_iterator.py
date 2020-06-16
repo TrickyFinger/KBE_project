@@ -220,11 +220,6 @@ class Main(Base):
     #     generate_warning(' ', msg)
     #     return iterator, ct_cant, ct_twist_tip, ct_toe
 
-
-    @Attribute
-    def num_iter(self):
-        return self.adjust_shape[1]
-
     @Attribute
     def path_iter_output(self):
         path_wd = os.getcwd()
